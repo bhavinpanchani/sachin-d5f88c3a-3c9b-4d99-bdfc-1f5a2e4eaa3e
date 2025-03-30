@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sachin's Weight Tracker</title>
+        <link rel="icon" type="image/png" href="favicon.png">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+        <script>
+            const COOKIE_NAME = "accessGranted";
+    
+            function getCookie(name) {
+                const cookies = document.cookie.split("; ");
+                for (let cookie of cookies) {
+                    const [cookieName, cookieValue] = cookie.split("=");
+                    if (cookieName === name) return cookieValue;
+                }
+                return null;
+            }
+    
+            function setCookie(name, value, days) {
+                let expires = "";
+                if (days) {
+                    const date = new Date();
+                    date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+                    expires = "; expires=" + date.toUTCString();
+                }
+                document.cookie = name + "=" + value + "; path=/" + expires;
+            }
+    
+            async function checkAccess() {
+                if (getCookie(COOKIE_NAME)) {
+                    document.getElementById("container").style.display = "block";
+                    return;
+                }
+
+                let enteredPasscode = prompt("Enter Passcode:");
+
+                const response = await fetch(`${baseURL}/login/Sachin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ passcode: enteredPasscode }),
+                });
+
+                const data = await response.json();
+                const loginSuccess = data.loginSuccess;
+
+                if (loginSuccess === true) {
+                    setCookie(COOKIE_NAME, "true", 1); // Cookie valid for 1 day
+                    document.getElementById("container").style.display = "block";
+                } else {
+                    alert("Incorrect Passcode. Access Denied.");
+                    document.getElementById("container").style.display = "none";
+                    checkAccess(); // Keep asking until correct passcode is entered
+                }
+            }
+    
+            window.onload = checkAccess;
+        </script>
+
+        <style>
+            /* @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            } */
+            #loadingOverlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(255, 255, 255, 1); /* Semi-transparent white */
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+            }
+
+            .spinner {
+                /* width: 50px;
+                height: 50px;
+                border: 6px solid #007bff;
+                border-top-color: transparent;
+                border-radius: 50%;
+                animation: spin 1s linear infinite; */
+
+                width: 72px;
+                height: 72px;
+                border-radius: 50%;
+                display: inline-block;
+                border-top: 3px solid #007bff;
+                border-right: 3px solid transparent;
+                box-sizing: border-box;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            
+            #container{
+                display: none;
+            }
+
+            body {
+                font-family: 'Montserrat', sans-serif;
+                background-color: #f8f9fa;
+                color: #343a40;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                min-height: 100vh;
+            }
+    
+            .container {
+                width: 90%;
+                max-width: 800px;
+                padding: 20px;
+            }
+    
+            .header {
+                text-align: center;
+                margin-bottom: 30px;
+            }
+    
+            .header h1 {
+                font-size: 2.5em;
+                color: #007bff;
+                margin-bottom: 5px;
+            }
+    
+            .header p {
+                font-size: 1.1em;
+                color: #6c757d;
+            }
+    
+            .card {
+                background-color: white;
+                border-radius: 10px;
+                /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+                margin-top: -40px;
+                margin-bottom: 50px;
+                /* padding: 1px 15px 15px 15px; */
+                /* opacity: 0; Initially hidden */
+                /* animation: fadeIn 0.8s ease-in-out forwards; */
+            }
+    
+            .card h2 {
+                color: #343a40;
+                margin-bottom: 20px;
+                border-bottom: 1px solid #dee2e6;
+                padding-bottom: 10px;
+            }
+
+            .card h4 {
+                color: #343a40;
+                margin-top: 4px;
+                margin-bottom: 8px;
+                border-bottom: 1px solid #dee2e6;
+                padding-bottom: 10px;
+            }
+    
+            /* form {
+                display: flex;
+                flex-direction: column;
+            } */
+
+            /* #datePicker{
+                text-align: center;
+                width: 95%;
+            } */
+
+            .weightFormInputsDiv {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                gap: 25px;
+            }
+
+            .weightFormInputs {
+                flex: 1;
+                min-width: 1px;
+            }
+
+            .weightFormInputs input{
+                width: 100%;
+                height: 50%;
+                padding: 8px;
+                /* font-size: 16px; */
+            }
+    
+            input[type="date"], input[type="number"] {
+                /* margin-bottom: 4px; */
+                background-color: white;
+                color: black;
+                border: 1px solid #ced4da;
+                border-radius: 10px;
+                font-size: 16px;
+                /* width: 92%; */
+            }
+            input[type="date"]{
+                appearance: none;
+                -webkit-appearance: none;
+            }
+    
+            .weightFormInputs button {
+                width: 100%;
+                padding: 8px 0px;
+                height: 50%;
+                /* line-height: normal; */
+                box-sizing: content-box;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 50px;
+                cursor: pointer;
+                font-size: 16px;
+                transition: background-color 0.3s;
+            }
+    
+            button:hover {
+                background-color: #0056b3;
+            }
+    
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+    
+            th, td {
+                padding: 12px 8px 12px 8px;
+                text-align: center;
+                border-bottom: 1px solid #dee2e6;
+            }
+    
+            th {
+                background-color: #f2f2f2;
+                font-weight: 600;
+            }
+    
+            .chart-container {
+                width: 100%;
+                /* height: 400px; */
+                height: 30vh;
+            }
+    
+            .progress-bar-container {
+                width: 100%;
+                /* background-color: #e9ecef; */
+                background-color: #d0d5d6;
+                /* background-color: lightgrey; */
+                border-radius: 5px;
+                height: 20px;
+                margin-bottom: 10px;
+            }
+    
+            .progress-bar {
+                height: 100%;
+                background-color: #007bff;
+                width: 0%;
+                border-radius: 5px;
+                transition: width 0.5s ease-in-out;
+            }
+    
+            .progress-bar-ridham {
+                background-color: #28a745;
+            }
+    
+            .progress-text {
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+            
+            #SachinProgressText{
+                /* color: #007bff; */
+                color: white;
+                font-weight: bold;
+                margin-left: 4px;
+            }
+
+            #ridhamProgressText{
+                /* color: #28a745; */
+                color: white;
+                font-weight: bold;
+                margin-left: 4px;
+            }
+            /* Flexbox container for the progress cards */
+            .progress-cards {
+                display: flex;
+                justify-content: space-between;
+                gap: 6px; /* Space between the cards */
+                /* margin-bottom: 30px; */
+            }
+
+            .card {
+                background-color: white;
+                border-radius: 10px;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                padding: 4px 8px 4px 8px;
+                flex: 1;
+                min-width: 30%; /* Ensures each card doesn't shrink too much */
+                box-sizing: border-box;
+            }
+
+            .card h2 {
+                color: #343a40;
+                margin-bottom: 20px;
+                border-bottom: 1px solid #dee2e6;
+                padding-bottom: 10px;
+            }
+
+            /* Optional: You can also tweak the width and margins of other elements to maintain consistency */
+            .card .progress-text {
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+        </style>
+    </head>
+    <body>
+
+        <div id="passcodeModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px;">
+            <p>Enter Passcode:</p>
+            <input type="number" id="passcodeInput" inputmode="numeric" pattern="[0-9]*" style="width: 100%; padding: 10px;">
+            <button onclick="submitPasscode()">Submit</button>
+        </div>
+    
+        <div class="container" id="container">
+            <div class="header">
+                <!-- <h1>Sachin's Weight Tracker</h1> -->
+            </div>
+
+            <div id="loadingOverlay">
+                <div class="spinner"></div>
+            </div>            
+        
+            <!-- New container for horizontal alignment of the 3 cards -->
+            <div class="progress-cards">
+                <div class="card">
+                    <h4>Day One Progress</h4>
+                    <div id="dayOneProgress"></div>
+                </div>
+                <!-- New: Current Month Progress -->
+                <div class="card">
+                    <h4 id="currentMonthProgressTitle"></h4>
+                    <div id="currentMonthProgress"></div>
+                </div>
+            
+                <div class="card">
+                    <h4>Weekly Progress</h4>
+                    <div id="weeklyProgress"></div>
+                </div>
+            </div>
+            
+            <!-- Move Overall Progress to the Bottom -->
+            <div class="card">
+                <h4>Goal Achieved</h4>
+                <!-- <div class="progress-text">Sachin:</div> -->
+                <div class="progress-bar-container">
+                    <div id="SachinProgressBar" class="progress-bar">
+                        <span class="progress-text" id="SachinProgressText">0%</span>
+                    </div>
+                </div>
+            </div>            
+        
+            <div class="card">
+                <h4>Weight Chart</h4>
+                <div class="chart-container">
+                    <canvas id="weightChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h4>Add/Update Weight</h4>
+                <form id="weightForm">
+                    <div class="weightFormInputsDiv">
+                        <div class="weightFormInputs">
+                            <input type="date" name="date" id="datePicker" required>
+                        </div>
+                        <div class="weightFormInputs">
+                            <input type="number" step="0.001" name="my_weight" placeholder="Weight (lbs)" inputmode="decimal">
+                        </div>
+                        <div class="weightFormInputs">
+                            <button type="submit">+</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        
+            <div class="card">
+                <h4>Weight Log</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Sachin's Weight</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weightTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+    <script>
+        // Set the default value of the date input to today's date
+        document.addEventListener("DOMContentLoaded", function () {
+            const today = new Date();
+            const localDate = today.toLocaleDateString('en-CA'); // Formats the date in YYYY-MM-DD format for local timezone
+            document.getElementById("datePicker").value = localDate;
+
+            const monthName = today.toLocaleString('default', { month: 'long' }); // Get full month name
+            document.getElementById("currentMonthProgressTitle").textContent = `${monthName} Progress`;
+        });
+
+        let weightChartInstance = null; // Store the chart instance globally
+        let baseURL = 'https://weight-tracker-backend-sfzg.onrender.com'
+        // let baseURL = 'http://192.168.1.224:8080'
+
+        async function fetchAndUpdate() {
+            
+            document.getElementById("loadingOverlay").style.display = "flex";
+
+            try {
+
+                const response = await fetch(`${baseURL}/sachin/weights`);
+                const data = await response.json();
+
+                // ✅ Sort by date (newest to oldest)
+                data.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                // Update Table
+                const table = document.getElementById('weightTable');
+                table.innerHTML = '';
+                data.forEach(row => {
+                    const [year, month, day] = row.date.split("-").map(Number);
+                    const dateObj = new Date(year, month - 1, day); // Explicitly set local date
+                    const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
+
+                    const weight = row.weight !== null ? row.weight : "–";
+
+                    const tr = `
+                        <tr>
+                            <td>${formattedDate}</td>
+                            <td>${weight}</td>
+                            <td><button onclick="deleteWeight(${row.id})" style="background:#fb5f63;color:white;border:none;padding:8px;width:35px;height:35px;border-radius:50px;cursor:pointer;font-weight:bold;">X</button></td>
+                        </tr>
+                    `;
+                    table.innerHTML += tr;
+                });
+
+                // Update Graph
+                const dates = data.map(d => {
+                    let dateObj = new Date(d.date + "T00:00:00"); // Ensures the local timezone is used
+                    return dateObj.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
+                }).reverse();
+                const weights = data.map(d => d.weight).reverse();
+
+                const ctx = document.getElementById('weightChart').getContext('2d');
+
+                if (weightChartInstance) {
+                    weightChartInstance.destroy();
+                }
+
+                weightChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [
+                            { label: "My weight", data: weights, borderColor: "#007bff", backgroundColor: "rgba(0,123,255,0.1)", fill: true, borderWidth: 1, pointRadius: 2, pointHoverRadius: 7 },
+                        ]
+                    },
+                    options: { plugins: { legend: { display: false } },responsive: true, maintainAspectRatio: false,
+                    }
+                });
+
+                updateProgressBars(data);
+                // Calculate weekly and day one progress
+                calculateProgress(data);
+                calculateCurrentMonthProgress(data);
+            } catch (error){
+                console.error("Error fetching data:", error);
+            } finally {
+                // Hide loading icon after data is loaded
+                document.getElementById("loadingOverlay").style.display = "none";
+            }
+        }
+
+    function updateProgressBars(data) {
+        if (data.length === 0) return;
+
+        const latestEntry = data[0];
+        const initialEntry = data[data.length - 1]; // Assuming the first entry is the initial weight
+
+        function calculateProgress(currentWeight, initialWeight) {
+            const goalWeight = 155;
+
+            // Check if currentWeight is null or invalid
+            if (currentWeight === null || currentWeight === undefined) {
+                return 0;  // No progress if current weight is missing
+            }
+
+            if (currentWeight <= goalWeight) {
+                return 100;  // Goal achieved if weight is 80kg or less
+            }
+
+            const progress = ((initialWeight - currentWeight) / (initialWeight - goalWeight)) * 100;
+            return Math.min(progress, 100);  // Ensure the progress doesn't exceed 100%
+        }
+
+        // Calculate progress for Sachin and Ridham
+        const SachinProgress = calculateProgress(latestEntry.weight, initialEntry.weight);
+
+        // Update the progress bars and text
+        document.getElementById("SachinProgressBar").style.width = SachinProgress + "%";
+
+        document.getElementById("SachinProgressText").textContent = SachinProgress.toFixed(1) + "%";
+
+        // Display message for missing weight values
+        if (latestEntry.weight === null) {
+            const SachinText = document.getElementById("SachinProgressText");
+            SachinText.textContent = "N/A";
+            SachinText.style.fontSize = "16px";
+            SachinText.style.fontWeight = "normal";
+        } 
+    }
+
+    function calculateProgress(data) {
+        if (data.length === 0) {
+            document.getElementById("dayOneProgress").innerHTML = "No data available.";
+            document.getElementById("weeklyProgress").innerHTML = "No data available.";
+            return;
+        }
+
+        function findValidWeight(entry, key) {
+            return entry[key] !== null ? entry[key] : null;
+        }
+
+        function formatProgress(value) {
+            if (isNaN(value) || value === null || value === "N/A") return "N/A"; 
+            return value >= 0 ? `+${parseFloat(value).toFixed(3)}` : parseFloat(value).toFixed(3);
+        }
+
+        function getValidEntry(index) {
+            for (let i = index; i < data.length; i++) {
+                if (data[i].weight !== null) {
+                    return data[i];
+                }
+            }
+            return null;
+        }
+
+        // Get first and latest valid entries
+        const latestEntry = getValidEntry(0);
+        const firstEntry = getValidEntry(data.length - 1);
+
+        if (!latestEntry || !firstEntry) {
+            document.getElementById("dayOneProgress").innerHTML = "Insufficient data.";
+            document.getElementById("weeklyProgress").innerHTML = "Insufficient data.";
+            return;
+        }
+
+        // Calculate overall progress
+        const dayOneProgress = {
+            SachinProgress: latestEntry.weight !== null && firstEntry.weight !== null
+                ? (latestEntry.weight - firstEntry.weight).toFixed(3)
+                : "N/A",
+        };
+
+        // Apply background color based on positive or negative progress
+        const SachinDayOneColor = dayOneProgress.SachinProgress < 0 ? '#d4edda' : '#f8d7da';
+        const ridhamDayOneColor = dayOneProgress.ridhamProgress < 0 ? '#d4edda' : '#f8d7da';
+
+        document.getElementById("dayOneProgress").innerHTML = `
+            <div style="background-color:${SachinDayOneColor}; padding: 6px; border-radius: 10px; margin-bottom: 4px">
+                ${formatProgress(dayOneProgress.SachinProgress)}
+            </div>
+        `;
+
+        // Calculate weekly progress
+        const lastWeekData = data.filter(d => {
+            const diff = (new Date() - new Date(d.date)) / (1000 * 3600 * 24);
+            return diff <= 7 && (d.weight !== null);
+        });
+
+        if (lastWeekData.length > 1) {
+            const weekEnd = lastWeekData[0];
+            const weekStart = lastWeekData[lastWeekData.length - 1];
+
+            const weeklyProgress = {
+                Sachin: weekEnd.weight !== null && weekStart.weight !== null
+                    ? (weekEnd.weight - weekStart.weight).toFixed(3)
+                    : "N/A",
+            };
+
+            const SachinWeeklyColor = weeklyProgress.Sachin < 0 ? '#d4edda' : '#f8d7da';
+            const ridhamWeeklyColor = weeklyProgress.ridham < 0 ? '#d4edda' : '#f8d7da';
+
+            document.getElementById("weeklyProgress").innerHTML = `
+                <div style="background-color:${SachinWeeklyColor}; padding: 6px; border-radius: 10px; margin-bottom: 4px">
+                    ${formatProgress(weeklyProgress.Sachin)}
+                </div>
+            `;
+        } else {
+            document.getElementById("weeklyProgress").innerHTML = `Insufficient data for weekly progress.`;
+        }
+    }
+
+    function calculateCurrentMonthProgress(data) {
+        if (data.length === 0) {
+            document.getElementById("currentMonthProgress").innerHTML = "No data available.";
+            return;
+        }
+
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1; // JS months are 0-indexed
+        const currentYear = now.getFullYear();
+
+        // Filter entries for the current month
+        const monthData = data.filter(d => {
+            const dateParts = d.date.split("-");
+            const entryYear = parseInt(dateParts[0]);
+            const entryMonth = parseInt(dateParts[1]);
+            return entryYear === currentYear && entryMonth === currentMonth;
+        });
+
+        if (monthData.length < 2) {
+            document.getElementById("currentMonthProgress").innerHTML = "Insufficient data.";
+            return;
+        }
+
+        // Get first and latest entry for the month
+        const firstEntry = monthData[monthData.length - 1];
+        const latestEntry = monthData[0];
+
+        // Calculate progress
+        const monthProgress = {
+            Sachin: latestEntry.weight !== null && firstEntry.weight !== null 
+                ? (latestEntry.weight - firstEntry.weight).toFixed(3) 
+                : "N/A",
+        };
+
+        // Determine background color
+        const SachinColor = monthProgress.Sachin < 0 ? '#d4edda' : '#f8d7da';
+        const ridhamColor = monthProgress.ridham < 0 ? '#d4edda' : '#f8d7da';
+
+        // Update UI
+        document.getElementById("currentMonthProgress").innerHTML = `
+            <div style="background-color:${SachinColor}; padding:6px; border-radius: 10px; margin-bottom: 4px">
+                ${monthProgress.Sachin}
+            </div>
+        `;
+    }
+
+    document.getElementById('weightForm').onsubmit = async function(e) {
+        e.preventDefault();
+
+        // Get input values
+        const date = this.date.value;
+        let weight = this.my_weight.value ? parseFloat(this.my_weight.value) : null;
+
+        const unFormattedDate = new Date(this.date.value + "T00:00:00");
+        const formattedDate = unFormattedDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' });
+
+        if(!weight){
+            // Confirmation message
+            alert(`Date: ${formattedDate}\nPlease enter weight...`);
+            return; // Stop submission if the user cancels
+        }
+
+        // Prepare the form data
+        const formData = { date, weight };
+
+        // Check if the date already exists in the database
+        const response = await fetch(`${baseURL}/sachin/weights/${date}`);
+        const existingRecord = await response.json();
+
+        if (existingRecord) {
+            function validateAndConfirmUpdate(existingRecord, weight, formattedDate) {
+                // Case 1: If both weights exist and are unchanged, stop execution
+                if (weight && existingRecord.weight) {
+                    if (weight === existingRecord.weight) {
+                        alert(`Date: ${formattedDate}\nRecord already exists`);
+                        return false; // Stop further execution
+                    }
+                }
+
+                // Case 4: If Sachin's weight is unchanged, just skip confirmation for him
+                let confirmMessage = `Confirmation\n\nDate: ${formattedDate}\n`;
+                let needsConfirmation = false;
+
+                if (weight && existingRecord.weight && weight !== existingRecord.weight) {
+                    confirmMessage += `Weight will be updated from ${existingRecord.weight} to ${weight}\n`;
+                    needsConfirmation = true;
+                }
+
+                // Show confirmation only if any weight is actually changing
+                if (needsConfirmation) {
+                    const confirmation = confirm(confirmMessage);
+                    if (!confirmation) return false;
+                }
+
+                return true; // Proceed with submission
+            }
+
+            // Usage inside form submission
+            if (!validateAndConfirmUpdate(existingRecord, weight, formattedDate)) {
+                return; // Stop execution if validation fails
+            }
+
+            // Send the updated data to the backend
+            await fetch(`${baseURL}/sachin/weights/${existingRecord.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+        } else {
+            // If no record exists for the given date, create a new record
+            await fetch(`${baseURL}/sachin/weights`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData),
+            });
+        }
+
+        // Reset the form
+        this.reset();
+
+        // Set the date picker to today's date after submission
+        const today = new Date();
+        const localDate = today.toLocaleDateString('en-CA');
+        document.getElementById("datePicker").value = localDate;
+
+        // Optionally, refresh data
+        fetchAndUpdate();
+    };
+
+        async function deleteWeight(id) {
+            if (!confirm("Are you sure you want to delete this record?")) return;
+
+            await fetch(`${baseURL}/sachin/weights/${id}`, { method: 'DELETE' });
+
+            fetchAndUpdate(); // Refresh table & chart after deletion
+        }
+
+        // Fetch data on page load
+        fetchAndUpdate();
+
+    </script>
+
+</body>
+</html>
