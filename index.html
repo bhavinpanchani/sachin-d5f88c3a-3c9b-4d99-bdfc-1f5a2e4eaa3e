@@ -484,25 +484,28 @@
                 const monthName = new Date(`${month}/01/${year}`).toLocaleString('default', { month: 'long', year: 'numeric' });
 
                 const collapseId = `collapseMonth${index}`;
+                const arrowId = `collapseArrow${index}`;
 
-                // Sort entries by date ascending for progress calculation
+                // Calculate progress
                 const sortedEntries = entries.slice().sort((a, b) => a.date.localeCompare(b.date));
-                const first = sortedEntries[0];
-                const last = sortedEntries[sortedEntries.length - 1];
+                const firstWeight = sortedEntries[0].weight;
+                const lastWeight = sortedEntries[sortedEntries.length - 1].weight;
+                let progressText = '';
 
-                const bhavinProgress = (first.myWeight !== null && last.myWeight !== null)
-                    ? (last.myWeight - first.myWeight).toFixed(1)
-                    : null;
+                if (firstWeight != null && lastWeight != null) {
+                    const diff = (lastWeight - firstWeight).toFixed(1);
+                    progressText = diff > 0 ? `+${diff}` : `${diff}`;
+                }
 
-                const ridhamProgress = (first.wifeWeight !== null && last.wifeWeight !== null)
-                    ? (last.wifeWeight - first.wifeWeight).toFixed(1)
-                    : null;
-
-                // Add month header with progress
+                // Create header row
                 const headerRow = document.createElement('tr');
+                headerRow.className = 'month-header-row';
                 headerRow.innerHTML = `
-                    <td colspan="4" style="background:#f2f2f2; cursor:pointer; font-weight:bold;" onclick="toggleCollapse('${collapseId}')">
-                    ${monthName}
+                    <td colspan="3" style="background:#f2f2f2; cursor:pointer; font-weight:bold; text-align:left;" onclick="toggleCollapse('${collapseId}', '${arrowId}')">
+                        ${monthName} (${progressText} lbs)
+                    </td>
+                    <td id="${arrowId}" style="background:#f2f2f2; cursor:pointer; font-weight:bold; text-align:center;" onclick="toggleCollapse('${collapseId}', '${arrowId}')">
+                        →
                     </td>
                 `;
                 table.appendChild(headerRow);
@@ -624,10 +627,22 @@
             }
         }
 
-        function toggleCollapse(id) {
-            const section = document.getElementById(id);
-            section.style.display = section.style.display === 'none' ? 'table-row' : 'none';
+        function toggleCollapse(collapseId, arrowId) {
+            const section = document.getElementById(collapseId);
+            const arrow = document.getElementById(arrowId);
+            const headerRow = arrow.parentElement.parentElement;
+
+            if (section.style.display === 'none' || section.style.display === '') {
+                section.style.display = 'table-row';
+                arrow.innerText = '↓';
+                arrow.style.fontWeight = 'bold';
+            } else {
+                section.style.display = 'none';
+                arrow.innerText = '→';
+                arrow.style.fontWeight = 'bold';
+            }
         }
+
 
         function celebrateConfetti() {
             confetti({
