@@ -349,6 +349,75 @@
                 font-size: 16px;
                 margin-bottom: 5px;
             }
+
+            /* Dark mode styles */
+            @media (prefers-color-scheme: dark) {
+                #loadingOverlay {
+                    background-color: #121212; /* dark background for dark mode */
+                }
+
+                .spinner {
+                    background: linear-gradient(0deg, #25292c 33%, #007bff 100%);
+                }
+
+                .spinner::after {
+                    background: #121212; /* optional: make center of spinner darker too */
+                }
+
+                body {
+                    background-color: #121212;
+                    color: #f1f1f1;
+                }
+
+                .card {
+                    background-color: #1e1e1e;
+                    color: #f1f1f1;
+                }
+
+                .card > h4 {
+                    color: #f1f1f1;
+                }
+
+                input[type="date"], input[type="number"] {
+                    background-color: #2c2c2c;
+                    color: #f1f1f1;
+                    border: 1px solid #444;
+                }
+
+                .card h2, .card h4 {
+                    color: #ffffff;
+                }
+
+                .weightFormInputs button {
+                    background-color: #007bff;
+                    color: white;
+                }
+
+                .progress-bar-container {
+                    background-color: #555;
+                }
+
+                .progress-bar {
+                    background-color: #007bff;
+                }
+
+                .progress-text {
+                    color: #ffffff;
+                }
+
+                .progress-bar-ridham {
+                    background-color: #28a745;
+                }
+
+                th {
+                    background-color: #2a2a2a;
+                    color: #f1f1f1;
+                }
+
+                td {
+                    background-color: #1e1e1e;
+                }
+            }
         </style>
     </head>
     <body>
@@ -497,14 +566,19 @@
                     progressText = diff > 0 ? `+${diff}` : `${diff}`;
                 }
 
+                const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const lightHeaderBg = '#f2f2f2';
+                const darkHeaderBg = '#2e2e2e';
+                const headerBg = isDarkMode ? darkHeaderBg : lightHeaderBg;
+
                 // Create header row
                 const headerRow = document.createElement('tr');
                 headerRow.className = 'month-header-row';
                 headerRow.innerHTML = `
-                    <td colspan="3" style="background:#f2f2f2; cursor:pointer; font-weight:bold; text-align:left;" onclick="toggleCollapse('${collapseId}', '${arrowId}')">
+                    <td colspan="3" style="background:${headerBg}; cursor:pointer; font-weight:bold; text-align:left;" onclick="toggleCollapse('${collapseId}', '${arrowId}')">
                         ${monthName} (${progressText} lbs)
                     </td>
-                    <td id="${arrowId}" style="background:#f2f2f2; cursor:pointer; font-weight:bold; text-align:center;" onclick="toggleCollapse('${collapseId}', '${arrowId}')">
+                    <td id="${arrowId}" style="background:${headerBg}; cursor:pointer; font-weight:bold; text-align:center;" onclick="toggleCollapse('${collapseId}', '${arrowId}')">
                         →
                     </td>
                 `;
@@ -732,8 +806,8 @@
         const firstEntry = getValidEntry(data.length - 1);
 
         if (!latestEntry || !firstEntry) {
-            document.getElementById("dayOneProgress").innerHTML = "Insufficient data.";
-            document.getElementById("weeklyProgress").innerHTML = "Insufficient data.";
+            document.getElementById("dayOneProgress").innerHTML = "Insufficient data";
+            document.getElementById("weeklyProgress").innerHTML = "Insufficient data";
             return;
         }
 
@@ -745,8 +819,17 @@
         };
 
         // Apply background color based on positive or negative progress
-        const SachinDayOneColor = dayOneProgress.SachinProgress < 0 ? '#d4edda' : '#f8d7da';
-        const ridhamDayOneColor = dayOneProgress.ridhamProgress < 0 ? '#d4edda' : '#f8d7da';
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        const lightGreen = '#d4edda';
+        const lightRed = '#f8d7da';
+        const darkGreen = '#1e4620'; // Darker green for dark mode
+        const darkRed = '#5f1a1a';   // Darker red for dark mode
+
+        const SachinDayOneColor = dayOneProgress.SachinProgress < 0
+            ? (isDarkMode ? darkGreen : lightGreen)
+            : (isDarkMode ? darkRed : lightRed);
+
 
         document.getElementById("dayOneProgress").innerHTML = `
             <div style="background-color:${SachinDayOneColor}; padding: 6px; border-radius: 10px; margin-bottom: 4px">
@@ -770,8 +853,9 @@
                     : "N/A",
             };
 
-            const SachinWeeklyColor = weeklyProgress.Sachin < 0 ? '#d4edda' : '#f8d7da';
-            const ridhamWeeklyColor = weeklyProgress.ridham < 0 ? '#d4edda' : '#f8d7da';
+            const SachinWeeklyColor = weeklyProgress.Sachin < 0
+                ? (isDarkMode ? darkGreen : lightGreen)
+                : (isDarkMode ? darkRed : lightRed);
 
             document.getElementById("weeklyProgress").innerHTML = `
                 <div style="background-color:${SachinWeeklyColor}; padding: 6px; border-radius: 10px; margin-bottom: 4px">
@@ -779,7 +863,7 @@
                 </div>
             `;
         } else {
-            document.getElementById("weeklyProgress").innerHTML = `Insufficient data for weekly progress.`;
+            document.getElementById("weeklyProgress").innerHTML = `Insufficient data`;
         }
     }
 
@@ -802,7 +886,7 @@
         });
 
         if (monthData.length < 2) {
-            document.getElementById("currentMonthProgress").innerHTML = "Insufficient data.";
+            document.getElementById("currentMonthProgress").innerHTML = "Insufficient data";
             return;
         }
 
@@ -818,8 +902,17 @@
         };
 
         // Determine background color
-        const SachinColor = monthProgress.Sachin < 0 ? '#d4edda' : '#f8d7da';
-        const ridhamColor = monthProgress.ridham < 0 ? '#d4edda' : '#f8d7da';
+        const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        const lightGreen = '#d4edda';
+        const lightRed = '#f8d7da';
+        const darkGreen = '#1e4620'; // Darker green for dark mode
+        const darkRed = '#5f1a1a';   // Darker red for dark mode
+
+        const SachinColor = monthProgress.Sachin < 0
+            ? (isDarkMode ? darkGreen : lightGreen)
+            : (isDarkMode ? darkRed : lightRed);
+
 
         // Update UI
         document.getElementById("currentMonthProgress").innerHTML = `
@@ -922,6 +1015,11 @@
 
         // Fetch data on page load
         fetchAndUpdate();
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            // Reapply theme styles when dark mode changes
+            fetchAndUpdate();  // Re-fetch and update all elements
+        });
 
     </script>
 
